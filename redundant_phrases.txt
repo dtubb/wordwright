@@ -20,14 +20,14 @@ actual fact :: fact
 actually :: 
 added bonus :: bonus
 additional :: 
-advance planning :: planning
+advance planning :: pl anning
 advantageous :: helpful
 afore :: 
 against :: 
 aggregate :: total
 ago :: 
 all of :: all
-all things being equal :: 
+all things being equal ::
 allocate :: assign
 along :: 
 alongside :: 

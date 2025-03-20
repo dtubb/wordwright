@@ -1,52 +1,75 @@
+#!/usr/bin/env python3
 import re
 import sys
-import pyperclip
-from pathlib import Path
 
-PHRASES_FILE = "redundant_phrases.txt"
+# 1) Load your phrase-replacements map (from redundant_phrases.txt)
+PHRASE_MAP = {}
+with open("redundant_phrases.txt", "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if not line or "::" not in line:
+            continue
+        phrase, replacement = line.split("::", 1)
+        phrase = phrase.strip().lower()
+        replacement = replacement.strip()
+        PHRASE_MAP[phrase] = replacement
 
-def load_replacement_phrases():
-    """Loads the phrase replacements from the file."""
-    phrase_dict = {}
-    phrases_path = Path(PHRASES_FILE)
+# 2) Sort longer phrases first, so multi-word phrases match before single words
+sorted_phrases = sorted(PHRASE_MAP.keys(), key=len, reverse=True)
 
-    if not phrases_path.exists():
-        print(f"Error: {PHRASES_FILE} not found.", file=sys.stderr)
-        sys.exit(1)
+# 3) Compile a regex that matches any of the keys as whole words, ignoring case
+PHRASE_REGEX = re.compile(
+    r"\b(" + "|".join(map(re.escape, sorted_phrases)) + r")\b",
+    flags=re.IGNORECASE
+)
 
-    with open(PHRASES_FILE, "r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split("::")
-            if len(parts) == 2:
-                bad_phrase, replacement = parts[0].strip(), parts[1].strip()
-                phrase_dict[bad_phrase] = replacement
-            elif len(parts) == 1 and parts[0].strip():
-                phrase_dict[parts[0].strip()] = ""
+def phrase_replacement(match):
+    """
+    Called for every matched phrase. We strip punctuation, lowercase,
+    and look up the correct replacement or an empty string.
+    """
+    matched_text = re.sub(r"[^\w\s]", "", match.group(1).strip().lower())
+    return PHRASE_MAP.get(matched_text, "")
 
-    return phrase_dict
+def remove_phrases(text):
+    """
+    Splits text into segments outside/inside quotes. Only the outside
+    is subjected to phrase replacements, then normalizes spaces without
+    destroying line breaks.
+    """
+    # Split on anything in quotes (straight or curly)
+    segments = re.split(r'([\"“”].*?[\"“”])', text)
 
-def remove_phrases(text: str, phrase_dict: dict):
-    """Removes or replaces redundant phrases in the text."""
-    for bad_phrase, replacement in phrase_dict.items():
-        pattern = rf"\b{re.escape(bad_phrase)}\b"
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
-    return text
+    processed_segments = []
+    for segment in segments:
+        # If segment looks quoted, leave it alone
+        if segment.startswith('"') or segment.startswith('“'):
+            processed_segments.append(segment)
+        else:
+            # Do phrase replacements in the non-quoted segment
+            replaced_segment = PHRASE_REGEX.sub(phrase_replacement, segment)
+            processed_segments.append(replaced_segment)
 
-def main():
-    """Reads input, processes it, and prints or copies cleaned text."""
-    if not sys.stdin.isatty():
-        text = sys.stdin.read().strip()
-    else:
-        text = pyperclip.paste()
+    combined_text = "".join(processed_segments)
 
-    phrase_dict = load_replacement_phrases()
-    cleaned_text = remove_phrases(text, phrase_dict)
+    # Fix spacing before punctuation (, . ! ? etc.)
+    combined_text = re.sub(r"\s+([.,;!?])", r"\1", combined_text)
 
-    if sys.stdin.isatty():
-        pyperclip.copy(cleaned_text)
-        print("Processed text copied to clipboard!")
-    else:
-        print(cleaned_text)
+    # Replace consecutive spaces (but preserve newlines!)
+    # i.e. only shrink multiple spaces on the same line
+    def shrink_spaces(line):
+        return re.sub(r' {2,}', ' ', line)
+
+    lines = combined_text.split('\n')
+    lines = [shrink_spaces(line) for line in lines]
+    cleaned_text = '\n'.join(lines)
+
+    # Finally trim overall leading/trailing whitespace (including extra newlines)
+    cleaned_text = cleaned_text.strip()
+
+    return cleaned_text
 
 if __name__ == "__main__":
-    main()
+    # Read from stdin, apply replacements, print result
+    text_in = sys.stdin.read()
+    print(remove_phrases(text_in))
