@@ -1,4 +1,4 @@
-# WordWright
+# WordWright: A Text *Editor*
 
 WordWright is a word processing pipeline that automates the editing steps I use daily. It processes standard input through various scripts to handle different editing tasks. Writing involves editing and revising, and making the text your own requires effort. Clichés, adverbs, and basic grammar fixes are useful early steps, and WordWright automates this process. It leverages OpenAI's language model to correct spelling, grammar, and punctuation errors, and improve formatting and style. Additionally, it uses DeepL's rewrite engine to clarify text.
 
