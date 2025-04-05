@@ -87,6 +87,7 @@ at this juncture :: now
 at this moment in time :: now
 at this point :: now
 at this point in time :: now
+at least :: 
 athwart :: 
 atop :: 
 attempt :: try
@@ -390,7 +391,6 @@ led ::
 left :: 
 legions :: many
 lent :: 
-let :: 
 lickety-split :: quickly
 lighted :: 
 like :: 

@@ -72,7 +72,6 @@ immediately
 instantly
 later
 meanwhile
-now
 previously
 recently
 soon
@@ -541,9 +540,7 @@ thankfully
 thoroughly
 thoughtfully
 tightly
-today
 together
-tomorrow
 touchingly
 tremendously
 truly
@@ -605,7 +602,6 @@ where
 while
 whole-heartedly
 wholly
-why
 wickedly
 widely
 wiggly
@@ -620,7 +616,6 @@ worthily
 wrongly
 yearly
 yearningly
-yesterday
 yet
 youthfully
 zanily

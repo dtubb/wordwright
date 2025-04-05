@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import re
 import sys
 
@@ -6,18 +5,24 @@ import sys
 PHRASE_MAP = {}
 with open("redundant_phrases.txt", "r", encoding="utf-8") as f:
     for line in f:
-        line = line.strip()
-        if not line or "::" not in line:
+        line = line.strip()  # Remove leading/trailing whitespace
+        if not line or "::" not in line:  # Skip empty lines or lines without '::'
             continue
-        phrase, replacement = line.split("::", 1)
-        phrase = phrase.strip().lower()
-        replacement = replacement.strip()
-        PHRASE_MAP[phrase] = replacement
+        phrase, replacement = line.split("::", 1)  # Split into phrase and replacement
+        phrase = phrase.strip().lower()  # Normalize phrase to lowercase
+        replacement = replacement.strip()  # Remove leading/trailing whitespace from replacement
+        PHRASE_MAP[phrase] = replacement  # Add to the phrase map
 
 # 2) Sort longer phrases first, so multi-word phrases match before single words
 sorted_phrases = sorted(PHRASE_MAP.keys(), key=len, reverse=True)
 
 # 3) Compile a regex that matches any of the keys as whole words, ignoring case
+# Explanation:
+# - \b: Word boundary to ensure we match whole words only.
+# - ( ... ): Grouping for the alternation (|) of all phrases.
+# - |: Alternation operator to match any one of the phrases.
+# - re.escape: Escapes special characters in phrases to treat them as literals.
+# - flags=re.IGNORECASE: Makes the regex case-insensitive.
 PHRASE_REGEX = re.compile(
     r"\b(" + "|".join(map(re.escape, sorted_phrases)) + r")\b",
     flags=re.IGNORECASE

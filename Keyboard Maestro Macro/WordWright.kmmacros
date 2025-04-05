@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>Activate</key>
+		<string>WithPalette</string>
+		<key>AddToMacroPalette</key>
+		<false/>
+		<key>AddToStatusMenu</key>
+		<true/>
+		<key>CreationDate</key>
+		<real>480972422.99745399</real>
+		<key>DisplayToggle</key>
+		<false/>
+		<key>KeyCode</key>
+		<integer>118</integer>
+		<key>Macros</key>
+		<array>
+			<dict>
+				<key>Actions</key>
+				<array>
+					<dict>
+						<key>Action</key>
+						<string>Copy</string>
+						<key>ActionUID</key>
+						<integer>617828</integer>
+						<key>IsDisclosed</key>
+						<false/>
+						<key>MacroActionType</key>
+						<string>CutCopyPaste</string>
+						<key>TimeOutAbortsMacro</key>
+						<true/>
+					</dict>
+					<dict>
+						<key>ActionUID</key>
+						<integer>617714</integer>
+						<key>DisplayKind</key>
+						<string>Window</string>
+						<key>HonourFailureSettings</key>
+						<true/>
+						<key>IncludeStdErr</key>
+						<true/>
+						<key>IncludedVariables</key>
+						<array/>
+						<key>MacroActionType</key>
+						<string>ExecuteShellScript</string>
+						<key>Path</key>
+						<string></string>
+						<key>Source</key>
+						<string>Clipboard</string>
+						<key>StopOnFailure</key>
+						<false/>
+						<key>Text</key>
+						<string>#!/bin/zsh
+source /Users/dtubb/.zshrc
+export PATH="/Users/dtubb/miniforge3/bin:/Applications/BBEdit.app/Contents/Helpers:$PATH"
+source /Users/dtubb/miniforge3/etc/profile.d/conda.sh
+conda activate wordwright_env
+
+cd /Users/dtubb/code/wordwright
+
+pbpaste &gt; /tmp/before.txt
+
+python /Users/dtubb/code/wordwright/wordwright.py &lt; /tmp/before.txt | tee /tmp/after.txt | pbcopy
+
+/Applications/BBEdit.app/Contents/Helpers/bbdiff /tmp/before.txt /tmp/after.txt || echo "bbdiff failed" &gt;&gt; /tmp/km_error.log</string>
+						<key>TimeOutAbortsMacro</key>
+						<false/>
+						<key>TrimResults</key>
+						<false/>
+						<key>TrimResultsNew</key>
+						<false/>
+						<key>UseText</key>
+						<true/>
+					</dict>
+					<dict>
+						<key>ActionUID</key>
+						<integer>617860</integer>
+						<key>IsDisclosed</key>
+						<false/>
+						<key>MacroActionType</key>
+						<string>SwitchToLastApplication</string>
+						<key>TimeOutAbortsMacro</key>
+						<true/>
+					</dict>
+				</array>
+				<key>CreationDate</key>
+				<real>764187207.02479899</real>
+				<key>ModificationDate</key>
+				<real>765565228.21978498</real>
+				<key>Name</key>
+				<string>WordWright</string>
+				<key>Triggers</key>
+				<array>
+					<dict>
+						<key>FireType</key>
+						<string>Pressed</string>
+						<key>KeyCode</key>
+						<integer>8</integer>
+						<key>MacroTriggerType</key>
+						<string>HotKey</string>
+						<key>Modifiers</key>
+						<integer>2304</integer>
+					</dict>
+				</array>
+				<key>UID</key>
+				<string>1DFC537E-88BA-48B8-9E03-FC02639691C5</string>
+			</dict>
+		</array>
+		<key>Modifiers</key>
+		<integer>4096</integer>
+		<key>Name</key>
+		<string>05) Text Filters</string>
+		<key>PaletteUnderMouse</key>
+		<false/>
+		<key>Theme</key>
+		<dict>
+			<key>Opacity</key>
+			<integer>100</integer>
+			<key>Size</key>
+			<integer>10</integer>
+			<key>UseDefaultInstead</key>
+			<false/>
+			<key>UseIcon</key>
+			<false/>
+			<key>UseTrigger</key>
+			<true/>
+		</dict>
+		<key>ToggleMacroUID</key>
+		<string>7519851A-CF5F-484A-B326-E476EB52DE19</string>
+		<key>UID</key>
+		<string>DDC90FDD-26E7-44FD-B246-EC94AF78CF01</string>
+	</dict>
+</array>
+</plist>
