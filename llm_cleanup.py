@@ -43,7 +43,7 @@ def chunk_text(text, max_words=1000):
     
     return chunks
 
-def send_to_llm(chunk, api_key, model="openai"):
+def send_to_llm(chunk, api_key, model="gpt-3.5-turbo"):
     # Define the prompt for the language model
     prompt = f'''Imagine yourself as an AI copy editor, proofreader, and first reader. I will provide you with text enclosed in double quotation marks. Without making substantive changes, your task is to:
 
@@ -55,7 +55,7 @@ def send_to_llm(chunk, api_key, model="openai"):
 - Add any bold/italic formatting needed.
 - Revise ALL CAPS to sentence case or lower case as apropriate.
 - Remove {{del}} and fix extra spaces.
-- DO NOT CHANGE QUOTATIONS.
+- DO NOT CHANGE QUOTATIONS OR CITATIONS.
 - Rewrite passive to active voice.
 - RETURN ONLY CORRECTED TEXT. DO NOT LIST CHANGES.
 – Replace dashes between words with a "---" or "--" for EM and EN dashes. With spaces. e.g. " — " or " – ".
@@ -70,27 +70,34 @@ def send_to_llm(chunk, api_key, model="openai"):
                 "Content-Type": "application/json"  # Specify the content type as JSON
             },
             json={
-                "model": "gpt-4o-mini-2024-07-18",  # Specify the model to use
+                "model": "gpt-3.5-turbo",  # Specify the model to use
                 "messages": [{"role": "user", "content": prompt}],  # Send the prompt as a user message
                 "max_tokens": 1500  # Limit the response to 1500 tokens
             }
         )
         response.raise_for_status()  # Raise an error if the response status is not successful
         return response.json()['choices'][0]['message']['content']  # Extract and return the content from the response
-    elif model == "openai":
-        # Send a request to the OpenAI davinci-codex model using the completions endpoint
+    elif model == "gpt-4":
+        # Send a request to the GPT-4 model using OpenAI's chat completions endpoint
         response = requests.post(
-            "https://api.openai.com/v1/engines/davinci-codex/completions",
-            headers={"Authorization": f"Bearer {api_key}"},  # Use the provided API key for authorization
-            json={"prompt": prompt, "max_tokens": 1500}  # Send the prompt and limit the response to 1500 tokens
+            "https://api.openai.com/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "gpt-4",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 1500
+            }
         )
-        response.raise_for_status()  # Raise an error if the response status is not successful
-        return response.json()['choices'][0]['text']  # Extract and return the text from the response
+        response.raise_for_status()
+        return response.json()['choices'][0]['message']['content']
     else:
         # Raise an error if the specified model is not supported
-        raise NotImplementedError("Only gpt-3.5-turbo and OpenAI davinci-codex models are implemented.")
+        raise NotImplementedError("Only gpt-3.5-turbo and gpt-4 models are implemented.")
     
-def cleanup_text(file_path, api_key, model="openai"):
+def cleanup_text(file_path, api_key, model="gpt-3.5-turbo"):
     # Read the input text
     text = read_input(file_path)
     
@@ -132,9 +139,6 @@ def cleanup_text(file_path, api_key, model="openai"):
     # Remove surrounding triple backticks if present
     final_output = re.sub(r"^```(?:markdown)?\n?", "", final_output)
     final_output = re.sub(r"\n?```$", "", final_output)
-
-    # Remove opening and closing quotation marks if present
-    final_output = final_output.strip('"')
 
     # Handle paragraph spacing based on original pattern
     lines = [line.strip() for line in final_output.split('\n') if line.strip()]
