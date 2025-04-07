@@ -14,24 +14,33 @@ def read_input(file_path):
         with open(file_path, 'r') as file:
             return file.read()
 
-def chunk_text(text, max_chunk_size=2000):
-    # Split text into sentences using punctuation as delimiters
-    sentences = re.split(r'(?<=[.!?])\s+', text)
+def chunk_text(text, max_words=1000):
+    """Split text into chunks of approximately max_words words, respecting paragraph boundaries."""
+    # First split into paragraphs
+    paragraphs = text.split('\n\n')
     chunks = []
-    current_chunk = ""
-    for sentence in sentences:
-        # Check if adding the sentence exceeds the max chunk size
-        if len(current_chunk) + len(sentence) + 1 > max_chunk_size:
-            if current_chunk:
-                chunks.append(current_chunk)  # Add the current chunk to the list
-            current_chunk = sentence  # Start a new chunk with the current sentence
-        else:
-            if current_chunk:
-                current_chunk += " " + sentence  # Append sentence to the current chunk
-            else:
-                current_chunk = sentence  # Initialize the current chunk with the sentence
+    current_chunk = []
+    current_word_count = 0
+    
+    for paragraph in paragraphs:
+        # Count words in current paragraph
+        paragraph_word_count = len(paragraph.split())
+        
+        # If adding this paragraph would exceed max_words, start a new chunk
+        if current_word_count + paragraph_word_count > max_words and current_chunk:
+            # Join current chunk and add to chunks list
+            chunks.append('\n\n'.join(current_chunk))
+            current_chunk = []
+            current_word_count = 0
+        
+        # Add paragraph to current chunk
+        current_chunk.append(paragraph)
+        current_word_count += paragraph_word_count
+    
+    # Add the last chunk if it exists
     if current_chunk:
-        chunks.append(current_chunk)  # Add the last chunk if it exists
+        chunks.append('\n\n'.join(current_chunk))
+    
     return chunks
 
 def send_to_llm(chunk, api_key, model="openai"):

@@ -67,28 +67,75 @@ def translate_text(text):
 
     return translated_text
 
+def chunk_text(text, max_words=1000):
+    """Split text into chunks of approximately max_words words, respecting paragraph boundaries."""
+    # First split into paragraphs
+    paragraphs = text.split('\n\n')
+    chunks = []
+    current_chunk = []
+    current_word_count = 0
+    
+    for paragraph in paragraphs:
+        # Count words in current paragraph
+        paragraph_word_count = len(paragraph.split())
+        
+        # If adding this paragraph would exceed max_words, start a new chunk
+        if current_word_count + paragraph_word_count > max_words and current_chunk:
+            # Join current chunk and add to chunks list
+            chunks.append('\n\n'.join(current_chunk))
+            current_chunk = []
+            current_word_count = 0
+        
+        # Add paragraph to current chunk
+        current_chunk.append(paragraph)
+        current_word_count += paragraph_word_count
+    
+    # Add the last chunk if it exists
+    if current_chunk:
+        chunks.append('\n\n'.join(current_chunk))
+    
+    return chunks
+
+def process_text_in_chunks(text):
+    """Process text in chunks using DeepL, preserving paragraph structure."""
+    # Get the original spacing pattern from environment variable
+    original_spacing = os.environ.get('ORIGINAL_SPACING', 'none')
+    
+    # Split text into chunks
+    chunks = chunk_text(text)
+    processed_chunks = []
+    
+    for chunk in chunks:
+        # Process each chunk through DeepL
+        result = deepl_client.rephrase_text(chunk, target_lang="EN-US")
+        processed_chunks.append(result.text)
+    
+    # Combine all processed chunks
+    processed_text = '\n\n'.join(processed_chunks)
+    
+    # Handle paragraph spacing based on original pattern
+    lines = [line.strip() for line in processed_text.split('\n') if line.strip()]
+    
+    if original_spacing == 'double':
+        # Keep double newlines between paragraphs
+        result_text = '\n\n'.join(lines)
+    elif original_spacing == 'single':
+        # Keep single newlines between paragraphs
+        result_text = '\n'.join(lines)
+    else:  # 'none'
+        # Keep no newlines between paragraphs
+        result_text = ' '.join(lines)
+    
+    return result_text
+
 # Read input text from standard input
 input_text = sys.stdin.read().strip()
 
 # Process the input text, preserving quoted sections
 processed_text = preserve_quotes_and_process(input_text)
 
-# Use DeepL to rephrase the processed text, targeting US English
-result = deepl_client.rephrase_text(processed_text, target_lang="EN-US")
-
-# Handle paragraph spacing in the DeepL result
-lines = [line.strip() for line in result.text.split('\n') if line.strip()]
-original_spacing = os.environ.get('ORIGINAL_SPACING', 'none')
-
-if original_spacing == 'double':
-    # Keep double newlines between paragraphs
-    result_text = '\n\n'.join(lines)
-elif original_spacing == 'single':
-    # Keep single newlines between paragraphs
-    result_text = '\n'.join(lines)
-else:  # 'none'
-    # Keep no newlines between paragraphs
-    result_text = ' '.join(lines)
+# Process the text in chunks using DeepL
+result_text = process_text_in_chunks(processed_text)
 
 # Output the rephrased text to standard output
 print(result_text)
