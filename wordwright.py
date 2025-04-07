@@ -2,9 +2,41 @@ import typer
 import sys
 import subprocess
 from pathlib import Path
+import re
 
 # Initialize a Typer application
 app = typer.Typer()
+
+def detect_line_spacing(text: str) -> int:
+    """Detects the number of newlines between paragraphs in the input text.
+    
+    Returns:
+        int: The number of newlines between paragraphs (1 or 2)
+    """
+    # Look for patterns of 2 or more newlines
+    double_newline_pattern = re.compile(r'\n{2,}')
+    if double_newline_pattern.search(text):
+        return 2
+    return 1
+
+def normalize_line_spacing(text: str, target_spacing: int) -> str:
+    """Normalizes the line spacing in the text to the target number of newlines.
+    
+    Args:
+        text: The input text
+        target_spacing: The desired number of newlines between paragraphs (1 or 2)
+    
+    Returns:
+        str: Text with normalized line spacing
+    """
+    if target_spacing == 2:
+        # Ensure exactly two newlines between paragraphs
+        text = re.sub(r'\n{3,}', '\n\n', text)  # Collapse 3+ newlines to 2
+        text = re.sub(r'\n(?!\n)', '\n\n', text)  # Add second newline where missing
+    else:
+        # Ensure exactly one newline between paragraphs
+        text = re.sub(r'\n{2,}', '\n', text)
+    return text
 
 def read_input(input_source: str = None):
     """Reads input from stdin or a file.
@@ -57,15 +89,15 @@ def main(input_source: str = None):
     
     This function orchestrates the text processing pipeline:
     1. Reads input from a file or stdin.
-    2. Sequentially processes the text through various scripts:
-       - Removes redundant phrases.
-       - Removes adverbs.
-       - Cleans up using a language model (LLM).
-       - Processes with DeepL for further refinement.
-       - Final cleanup for normalization.
-    3. Outputs the final processed text.
+    2. Detects the original line spacing pattern
+    3. Sequentially processes the text through various scripts
+    4. Restores the original line spacing pattern
+    5. Outputs the final processed text.
     """
     text = read_input(input_source)
+    
+    # Detect the original line spacing pattern
+    original_spacing = detect_line_spacing(text)
     
     # Remove redundant phrases from the text
     phrases_text = run_script("remove_phrases.py", text)
@@ -81,6 +113,9 @@ def main(input_source: str = None):
 
     # Perform final cleanup and normalization
     final_text = run_script("final_cleanup.py", deepl_text)
+    
+    # Restore the original line spacing pattern
+    final_text = normalize_line_spacing(final_text, original_spacing)
     
     # Output the final processed text
     typer.echo(final_text)

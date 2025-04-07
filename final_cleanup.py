@@ -3,24 +3,24 @@ import re
 
 def simple_cleanup(text):
     # Replace straight double quotes with smart quotes
-    text = re.sub(r'"(.*?)"', r'“\1”', text)
+    text = re.sub(r'"(.*?)"', r'\u201C\1\u201D', text)
 
     # Replace straight single quotes/apostrophes with smart ones
     # The first regex handles quotes not surrounded by word characters
-    text = re.sub(r"(?<!\w)'(.*?)'(?!\w)", r'‘\1’', text)
+    text = re.sub(r"(?<!\w)'(.*?)'(?!\w)", r'\u2018\1\u2019', text)
     # The second regex handles contractions and possessives
-    text = re.sub(r"(\w)'(\w)", r"\1’\2", text)
+    text = re.sub(r"(\w)'(\w)", r"\1\u2019\2", text)
 
     # Replace triple dots or spaced ellipses with a single ellipsis character
-    text = re.sub(r"\.\s?\.\s?\.", "…", text)
+    text = re.sub(r"\.\s?\.\s?\.", "\u2026", text)
 
     # Replace different dash patterns with appropriate dashes
     # Triple dash to em dash
-    text = re.sub(r" ?- ?- ?- ?", "—", text)
+    text = re.sub(r" ?- ?- ?- ?", "\u2014", text)
     # Double dash to en dash
-    text = re.sub(r" ?-- ?", "–", text)
+    text = re.sub(r" ?-- ?", "\u2013", text)
     # Single dash to em dash, but only if not surrounded by word characters
-    text = re.sub(r"(?<!\w) ?- ?(?!\w)", "—", text)
+    text = re.sub(r"(?<!\w) ?- ?(?!\w)", "\u2014", text)
 
     # Remove any space before punctuation marks
     text = re.sub(r" (\.|,|!|\?|:|;)", r"\1", text)
@@ -39,9 +39,6 @@ def simple_cleanup(text):
 
     # Normalize hyphen spacing by removing spaces around hyphens
     text = re.sub(r"\s*-\s*", "-", text)
-
-    # Collapse three or more newlines into just two
-    text = re.sub(r"\n{3,}", "\n\n", text)
 
     # Remove spaces between multiple punctuation marks
     text = re.sub(r'([?!.,])\s+([?!.,])', r'\1\2', text)
