@@ -3,21 +3,20 @@ import sys
 import subprocess
 from pathlib import Path
 import re
+import os
 
 # Initialize a Typer application
 app = typer.Typer()
 
-def detect_line_spacing(text: str) -> int:
-    """Detects the number of newlines between paragraphs in the input text.
-    
-    Returns:
-        int: The number of newlines between paragraphs (1 or 2)
-    """
-    # Look for patterns of 2 or more newlines
-    double_newline_pattern = re.compile(r'\n{2,}')
-    if double_newline_pattern.search(text):
-        return 2
-    return 1
+def detect_paragraph_spacing(text: str) -> str:
+    """Detect the paragraph spacing pattern in the input text"""
+    # Look for double newlines first (markdown style)
+    if re.search(r'\n\s*\n', text):
+        return 'double'  # Markdown style (double newlines)
+    elif '\n' in text:
+        return 'single'  # Word processor style (single newlines)
+    else:
+        return 'none'    # No newlines between paragraphs
 
 def normalize_line_spacing(text: str, target_spacing: int) -> str:
     """Normalizes the line spacing in the text to the target number of newlines.
@@ -30,9 +29,10 @@ def normalize_line_spacing(text: str, target_spacing: int) -> str:
         str: Text with normalized line spacing
     """
     if target_spacing == 2:
-        # Ensure exactly two newlines between paragraphs
-        text = re.sub(r'\n{3,}', '\n\n', text)  # Collapse 3+ newlines to 2
-        text = re.sub(r'\n(?!\n)', '\n\n', text)  # Add second newline where missing
+        # First, collapse any 3+ newlines to 2
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        # Then ensure paragraphs are separated by exactly two newlines
+        text = re.sub(r'(?<!\n)\n(?!\n)', '\n\n', text)
     else:
         # Ensure exactly one newline between paragraphs
         text = re.sub(r'\n{2,}', '\n', text)
@@ -58,30 +58,37 @@ def read_input(input_source: str = None):
         typer.echo("Error: No input provided. Pipe text into this script or specify a file.", err=True)
         raise typer.Exit(1)
 
-def run_script(script_name: str, text: str):
+def run_script(script_name: str, text: str, env_vars: dict = None):
     """Runs an external script with text input via stdin and returns its stdout output.
     
     This function uses subprocess to execute another Python script, passing the text
     as input. If the script execution fails (non-zero exit code), it raises an error and exits.
     """
+    # Create environment with additional variables if provided
+    env = os.environ.copy()
+    if env_vars:
+        env.update(env_vars)
+    
     result = subprocess.run(
         ["python", script_name],
         input=text,
         text=True,
-        capture_output=True
+        capture_output=True,
+        env=env
     )
     if result.returncode != 0:
         typer.echo(f"Error running {script_name}: {result.stderr}", err=True)
         raise typer.Exit(1)
-    return result.stdout.strip()
+    # Only strip trailing newlines, not leading ones
+    return result.stdout.rstrip('\n')
 
-def run_deepl(text: str):
+def run_deepl(text: str, env_vars: dict = None):
     """Runs the DeepL processing script.
     
     This function is a specific use case of run_script, tailored to execute the
     'deepl_write.py' script, which is assumed to perform some form of text processing.
     """
-    return run_script("deepl_write.py", text)
+    return run_script("deepl_write.py", text, env_vars)
 
 @app.command()
 def main(input_source: str = None):
@@ -96,26 +103,26 @@ def main(input_source: str = None):
     """
     text = read_input(input_source)
     
-    # Detect the original line spacing pattern
-    original_spacing = detect_line_spacing(text)
+    # Detect the original paragraph spacing pattern
+    original_spacing = detect_paragraph_spacing(text)
+    
+    # Create environment variables to pass spacing pattern
+    env_vars = {'ORIGINAL_SPACING': original_spacing}
     
     # Remove redundant phrases from the text
-    phrases_text = run_script("remove_phrases.py", text)
+    phrases_text = run_script("remove_phrases.py", text, env_vars)
     
     # Remove adverbs from the text
-    adverbs_text = run_script("remove_adverbs.py", phrases_text)
+    adverbs_text = run_script("remove_adverbs.py", phrases_text, env_vars)
            
     # Clean up the text using a language model
-    llm_text = run_script("llm_cleanup.py", adverbs_text)
+    llm_text = run_script("llm_cleanup.py", adverbs_text, env_vars)
     
     # Process the text with DeepL for further refinement
-    deepl_text = run_deepl(llm_text)
+    deepl_text = run_deepl(llm_text, env_vars)
 
     # Perform final cleanup and normalization
-    final_text = run_script("final_cleanup.py", deepl_text)
-    
-    # Restore the original line spacing pattern
-    final_text = normalize_line_spacing(final_text, original_spacing)
+    final_text = run_script("final_cleanup.py", deepl_text, env_vars)
     
     # Output the final processed text
     typer.echo(final_text)

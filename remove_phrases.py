@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 
 # 1) Load your phrase-replacements map (from redundant_phrases.txt)
 PHRASE_MAP = {}
@@ -48,7 +49,7 @@ def remove_phrases(text):
     processed_segments = []
     for segment in segments:
         # If segment looks quoted, leave it alone
-        if segment.startswith('"') or segment.startswith('“'):
+        if segment.startswith('"') or segment.startswith('"'):
             processed_segments.append(segment)
         else:
             # Do phrase replacements in the non-quoted segment
@@ -68,9 +69,6 @@ def remove_phrases(text):
     lines = combined_text.split('\n')
     lines = [shrink_spaces(line) for line in lines]
     cleaned_text = '\n'.join(lines)
-
-    # Finally trim overall leading/trailing whitespace (including extra newlines)
-    cleaned_text = cleaned_text.strip()
 
     return cleaned_text
 

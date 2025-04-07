@@ -84,6 +84,10 @@ def send_to_llm(chunk, api_key, model="openai"):
 def cleanup_text(file_path, api_key, model="openai"):
     # Read the input text
     text = read_input(file_path)
+    
+    # Get the original spacing pattern from environment variable
+    original_spacing = os.environ.get('ORIGINAL_SPACING', 'none')
+    
     # Split the text into manageable chunks
     chunks = chunk_text(text)
     cleaned_text = []
@@ -122,6 +126,19 @@ def cleanup_text(file_path, api_key, model="openai"):
 
     # Remove opening and closing quotation marks if present
     final_output = final_output.strip('"')
+
+    # Handle paragraph spacing based on original pattern
+    lines = [line.strip() for line in final_output.split('\n') if line.strip()]
+    
+    if original_spacing == 'double':
+        # Keep double newlines between paragraphs
+        final_output = '\n\n'.join(lines)
+    elif original_spacing == 'single':
+        # Keep single newlines between paragraphs
+        final_output = '\n'.join(lines)
+    else:  # 'none'
+        # Keep no newlines between paragraphs
+        final_output = ' '.join(lines)
 
     return final_output
 

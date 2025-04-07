@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 from pathlib import Path
 
 # File containing the list of adverbs
@@ -85,7 +86,7 @@ def remove_adverbs(text):
     # Combine all parts back into a single text
     cleaned_text = ''.join(cleaned_parts)
 
-    # Replace multiple spaces with a single space while preserving new lines
+    # Replace multiple spaces with a single space while preserving newlines
     cleaned_text = re.sub(r' {2,}', ' ', cleaned_text)
 
     return cleaned_text
