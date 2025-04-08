@@ -3,3 +3,5 @@ typer==0.9.4
 deepl==1.21.1
 requests==2.32.3
 pyperclip==1.8.2
+smartypants
+ftfy

@@ -1,6 +1,7 @@
 import sys
 import re
 import os
+import smartypants
 
 def detect_paragraph_spacing(text):
     """Detect the paragraph spacing pattern in the input text"""
@@ -50,14 +51,8 @@ def simple_cleanup(text, original_spacing='none'):
         # No spacing between paragraphs
         text = ' '.join(paragraphs)
 
-    # Handle double quotes (U+201C LEFT DOUBLE QUOTATION MARK, U+201D RIGHT DOUBLE QUOTATION MARK)
-    text = re.sub(r'"([^"]*)"', '\u201c\\1\u201d', text)
-    
-    # Handle single quotes (U+2018 LEFT SINGLE QUOTATION MARK, U+2019 RIGHT SINGLE QUOTATION MARK)
-    text = re.sub(r"'([^']*)'", '\u2018\\1\u2019', text)
-    
-    # Handle apostrophes in contractions and possessives (U+2019 RIGHT SINGLE QUOTATION MARK)
-    text = re.sub(r"(\w)'(\w)", '\\1\u2019\\2', text)
+    # Use smartypants for smart quotes and typography
+    text = smartypants.smartypants(text, smartypants.Attr.u | smartypants.Attr.q | smartypants.Attr.b | smartypants.Attr.d | smartypants.Attr.e)
 
     # Replace triple dots or spaced ellipses with a single ellipsis character
     text = re.sub(r"\.\s?\.\s?\.", "…", text)

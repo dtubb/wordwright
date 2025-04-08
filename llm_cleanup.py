@@ -55,7 +55,7 @@ def send_to_llm(chunk, api_key, model="gpt-3.5-turbo"):
 - Add any bold/italic formatting needed.
 - Revise ALL CAPS to sentence case or lower case as apropriate.
 - Remove {{del}} and fix extra spaces.
-- DO NOT CHANGE QUOTATIONS OR CITATIONS.
+- DO NOT CHANGE QUOTATIONS.
 - Rewrite passive to active voice.
 - RETURN ONLY CORRECTED TEXT. DO NOT LIST CHANGES.
 – Replace dashes between words with a "---" or "--" for EM and EN dashes. With spaces. e.g. " — " or " – ".
