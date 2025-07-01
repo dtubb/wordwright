@@ -97,34 +97,33 @@ def chunk_text(text, max_words=1000):
     return chunks
 
 def process_text_in_chunks(text):
-    """Process text in chunks using DeepL, preserving paragraph structure."""
+    """Process text in chunks using DeepL, preserving paragraph structure and excluding headings."""
     # Get the original spacing pattern from environment variable
     original_spacing = os.environ.get('ORIGINAL_SPACING', 'none')
     
-    # Split text into chunks
-    chunks = chunk_text(text)
-    processed_chunks = []
+    # Split text into lines and process each non-heading line separately
+    lines = text.split('\n')
+    processed_lines = []
     
-    for chunk in chunks:
-        # Process each chunk through DeepL
-        result = deepl_client.rephrase_text(chunk, target_lang="EN-US")
-        processed_chunks.append(result.text)
+    for line in lines:
+        if line.strip().startswith('#'):
+            # Preserve headings exactly as they are
+            processed_lines.append(line)
+        elif line.strip():
+            # Process non-empty, non-heading lines through DeepL
+            try:
+                result = deepl_client.rephrase_text(line.strip(), target_lang="EN-US")
+                processed_lines.append(result.text)
+            except Exception as e:
+                # If DeepL fails, keep the original line
+                print(f"DeepL processing failed for line: {e}", file=sys.stderr)
+                processed_lines.append(line)
+        else:
+            # Preserve empty lines
+            processed_lines.append(line)
     
-    # Combine all processed chunks
-    processed_text = '\n\n'.join(processed_chunks)
-    
-    # Handle paragraph spacing based on original pattern
-    lines = [line.strip() for line in processed_text.split('\n') if line.strip()]
-    
-    if original_spacing == 'double':
-        # Keep double newlines between paragraphs
-        result_text = '\n\n'.join(lines)
-    elif original_spacing == 'single':
-        # Keep single newlines between paragraphs
-        result_text = '\n'.join(lines)
-    else:  # 'none'
-        # Keep no newlines between paragraphs
-        result_text = ' '.join(lines)
+    # Reconstruct the text with original spacing
+    result_text = '\n'.join(processed_lines)
     
     return result_text
 

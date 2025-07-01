@@ -42,7 +42,7 @@ def split_by_quotes(text):
     is the actual text of that part.
     """
     # Compile a regex pattern to match quoted sections
-    pattern = re.compile(r'(["“])([^\1]*?)(["”])', re.MULTILINE)
+    pattern = re.compile(r'(["“])([^\1]*?)([""]])', re.MULTILINE)
     parts = []
     last_end = 0
 
@@ -69,7 +69,7 @@ if ADVERB_REGEX:
     ADVERB_REGEX = re.compile(ADVERB_REGEX, re.MULTILINE)
 
 # Improved QUOTE_REGEX to ensure proper quote handling
-QUOTE_REGEX = r'(["“])([^\1]*?)(["”])'  # Match straight and curly double quotes
+QUOTE_REGEX = r'([""])([^\1]*?)([""])'  # Match straight and curly double quotes
 
 def remove_adverbs(text):
     # Split the text into quoted and non-quoted parts
@@ -80,7 +80,21 @@ def remove_adverbs(text):
     for is_quoted, segment in parts:
         # Remove adverbs only from non-quoted sections
         if not is_quoted and ADVERB_REGEX:
-            segment = ADVERB_REGEX.sub('', segment)  # Remove adverbs
+            # Split the segment into lines to handle headings separately
+            lines = segment.split('\n')
+            processed_lines = []
+            
+            for line in lines:
+                # Skip processing for markdown headings (lines starting with #)
+                if line.strip().startswith('#'):
+                    processed_lines.append(line)
+                else:
+                    # Remove adverbs from non-heading lines
+                    processed_line = ADVERB_REGEX.sub('', line)
+                    processed_lines.append(processed_line)
+            
+            # Rejoin the lines
+            segment = '\n'.join(processed_lines)
         cleaned_parts.append(segment)
 
     # Combine all parts back into a single text

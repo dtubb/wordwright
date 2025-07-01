@@ -41,10 +41,10 @@ def remove_phrases(text):
     """
     Splits text into segments outside/inside quotes. Only the outside
     is subjected to phrase replacements, then normalizes spaces without
-    destroying line breaks.
+    destroying line breaks. Excludes markdown headings from processing.
     """
     # Split on anything in quotes (straight or curly)
-    segments = re.split(r'([\"“”].*?[\"“”])', text)
+    segments = re.split(r'([\"""].*?[\"""])', text)
 
     processed_segments = []
     for segment in segments:
@@ -52,9 +52,22 @@ def remove_phrases(text):
         if segment.startswith('"') or segment.startswith('"'):
             processed_segments.append(segment)
         else:
-            # Do phrase replacements in the non-quoted segment
-            replaced_segment = PHRASE_REGEX.sub(phrase_replacement, segment)
-            processed_segments.append(replaced_segment)
+            # Split the segment into lines to handle headings separately
+            lines = segment.split('\n')
+            processed_lines = []
+            
+            for line in lines:
+                # Skip processing for markdown headings (lines starting with #)
+                if line.strip().startswith('#'):
+                    processed_lines.append(line)
+                else:
+                    # Do phrase replacements in non-heading lines
+                    replaced_line = PHRASE_REGEX.sub(phrase_replacement, line)
+                    processed_lines.append(replaced_line)
+            
+            # Rejoin the lines
+            processed_segment = '\n'.join(processed_lines)
+            processed_segments.append(processed_segment)
 
     combined_text = "".join(processed_segments)
 

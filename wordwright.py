@@ -91,7 +91,7 @@ def run_deepl(text: str, env_vars: dict = None):
     return run_script("deepl_write.py", text, env_vars)
 
 @app.command()
-def main(input_source: str = None):
+def main(input_source: str = typer.Argument(None, help="Input file path (optional, defaults to stdin)")):
     """Main command for processing input text.
     
     This function orchestrates the text processing pipeline:
