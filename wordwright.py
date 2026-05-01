@@ -70,7 +70,7 @@ def run_script(script_name: str, text: str, env_vars: dict = None):
         env.update(env_vars)
     
     result = subprocess.run(
-        ["python", script_name],
+        [sys.executable, script_name],
         input=text,
         text=True,
         capture_output=True,

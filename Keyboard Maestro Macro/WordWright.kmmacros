@@ -53,18 +53,9 @@
 						<false/>
 						<key>Text</key>
 						<string>#!/bin/zsh
-source /Users/dtubb/.zshrc
-export PATH="/Users/dtubb/miniforge3/bin:/Applications/BBEdit.app/Contents/Helpers:$PATH"
-source /Users/dtubb/miniforge3/etc/profile.d/conda.sh
-conda activate wordwright_env
-
-cd /Users/dtubb/code/wordwright
-
-pbpaste &gt; /tmp/before.txt
-
-python /Users/dtubb/code/wordwright/wordwright.py &lt; /tmp/before.txt | tee /tmp/after.txt | pbcopy
-
-/Applications/BBEdit.app/Contents/Helpers/bbdiff /tmp/before.txt /tmp/after.txt || echo "bbdiff failed" &gt;&gt; /tmp/km_error.log</string>
+# Run the WordWright launcher in clipboard mode.
+# Launcher handles venv, API keys, and pbpaste/pbcopy.
+/Users/danieltubb/code/wordwright/run_wordwright.sh</string>
 						<key>TimeOutAbortsMacro</key>
 						<false/>
 						<key>TrimResults</key>

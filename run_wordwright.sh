@@ -1,19 +1,48 @@
 #!/bin/zsh
+# WordWright launcher.
+#
+# Two modes:
+#   1. Keyboard Maestro / hotkey (no args): edit the clipboard in place.
+#      Original goes to /tmp/before.txt, edited to /tmp/after.txt and clipboard.
+#   2. Automator / CLI (file path args): edit each file, write
+#      <name>.edited.<ext> next to the source. Source is never overwritten.
+
 set -euo pipefail
 
-# Activate the project's virtual environment
-source /Users/dtubb/code/wordwright/.venv/bin/activate
+REPO="/Users/danieltubb/code/wordwright"
+LOG="/tmp/wordwright.log"
+echo "=== WordWright run: $(date) args=$# ===" >> "$LOG"
 
-# Ensure BBEdit helper tools are available
-export PATH="/Applications/BBEdit.app/Contents/Helpers:$PATH"
+# Use absolute paths so Automator (which has no PATH) still finds tools.
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
-# Load secrets if present
-[[ -f /Users/dtubb/.config/wordwright/env.sh ]] && source /Users/dtubb/.config/wordwright/env.sh
+# API keys.
+[[ -f /Users/danieltubb/.config/wordwright/env.sh ]] && source /Users/danieltubb/.config/wordwright/env.sh
 
-cd /Users/dtubb/code/wordwright
+cd "$REPO"
+PY="$REPO/.venv/bin/python"
 
-pbpaste > /tmp/before.txt
+if [[ $# -eq 0 ]]; then
+    # Clipboard mode.
+    echo "mode: clipboard" >> "$LOG"
+    pbpaste > /tmp/before.txt
+    "$PY" "$REPO/wordwright.py" < /tmp/before.txt | tee /tmp/after.txt | pbcopy
+    echo "clipboard updated ($(wc -c < /tmp/after.txt) bytes)" >> "$LOG"
+else
+    # File mode.
+    for src in "$@"; do
+        echo "mode: file -- $src" >> "$LOG"
+        if [[ ! -f "$src" ]]; then
+            echo "ERROR: not a file: $src" | tee -a "$LOG" >&2
+            continue
+        fi
+        dir="${src:h}"
+        base="${src:t:r}"
+        ext="${src:e}"
+        out="$dir/$base.edited.${ext:-md}"
+        "$PY" "$REPO/wordwright.py" "$src" > "$out"
+        echo "wrote $out ($(wc -c < "$out") bytes)" >> "$LOG"
+    done
+fi
 
-python /Users/dtubb/code/wordwright/wordwright.py < /tmp/before.txt | tee /tmp/after.txt | pbcopy
-
-# /Applications/BBEdit.app/Contents/Helpers/bbdiff /tmp/before.txt /tmp/after.txt || echo "bbdiff failed" >> /tmp/km_error.log 
+echo "=== done ===" >> "$LOG"
